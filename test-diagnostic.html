@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vercel Diagnostic Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0051cc;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Vercel Diagnostic Test</h1>
+        <p>Test if your environment variables are set correctly in Vercel.</p>
+        
+        <div class="input-group">
+            <label for="vercelUrl">Your Vercel URL:</label>
+            <input 
+                type="text" 
+                id="vercelUrl" 
+                placeholder="https://inkle-assignment-five.vercel.app"
+                value="https://inkle-assignment-five.vercel.app"
+            />
+        </div>
+        
+        <button onclick="testDiagnostic()">Test Diagnostic Endpoint</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testDiagnostic() {
+            const url = document.getElementById('vercelUrl').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!url) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter a Vercel URL';
+                return;
+            }
+            
+            const diagnosticUrl = url.replace(/\/$/, '') + '/api/diagnostic';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing... ' + diagnosticUrl;
+            
+            try {
+                const response = await fetch(diagnosticUrl);
+                const data = await response.json();
+                
+                resultDiv.className = 'result ' + (data.status === 'OK' ? 'success' : 'error');
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message + '\n\nMake sure:\n1. The URL is correct\n2. The deployment is complete\n3. Environment variables are set in Vercel';
+            }
+        }
+    </script>
+</body>
+</html>
+
