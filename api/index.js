@@ -10,8 +10,10 @@ const NO_DB_ENDPOINTS = ['/health', '/api/diagnostic'];
 
 // Ensure database connection before handling requests
 module.exports = async (req, res) => {
-  const url = req.url || '';
-  const needsDb = !NO_DB_ENDPOINTS.some(endpoint => url.startsWith(endpoint));
+  const url = req.url || req.path || '';
+  // Remove query string for matching
+  const path = url.split('?')[0];
+  const needsDb = !NO_DB_ENDPOINTS.some(endpoint => path === endpoint || path.startsWith(endpoint));
 
   // Log environment check (for debugging)
   if (!needsDb || !process.env.MONGODB_URI) {
