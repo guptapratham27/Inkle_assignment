@@ -34,6 +34,27 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Diagnostic endpoint to check environment variables (without exposing values)
+app.get('/api/diagnostic', (req, res) => {
+  const envCheck = {
+    hasMongoUri: !!process.env.MONGODB_URI,
+    hasJwtSecret: !!process.env.JWT_SECRET,
+    hasJwtExpire: !!process.env.JWT_EXPIRE,
+    nodeEnv: process.env.NODE_ENV || 'not set',
+    isVercel: process.env.VERCEL === '1',
+    mongoUriLength: process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0,
+    mongoUriStartsWith: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'not set'
+  };
+  
+  res.json({
+    status: envCheck.hasMongoUri && envCheck.hasJwtSecret ? 'OK' : 'ERROR',
+    environment: envCheck,
+    message: envCheck.hasMongoUri 
+      ? 'Environment variables are set' 
+      : 'MONGODB_URI is missing - please set it in Vercel environment variables'
+  });
+});
+
 // Only start server if not in Vercel serverless environment
 if (process.env.VERCEL !== '1') {
   const PORT = process.env.PORT || 3000;
