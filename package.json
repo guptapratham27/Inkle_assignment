@@ -8,7 +8,8 @@
     "dev": "nodemon src/app.js",
     "create-owner": "node scripts/createOwner.js",
     "create-test-data": "node scripts/createTestData.js",
-    "remove-test-data": "node scripts/removeTestData.js"
+    "remove-test-data": "node scripts/removeTestData.js",
+    "build": "cd frontend && npm install && npm run build"
   },
   "keywords": ["social", "activity", "feed", "api"],
   "author": "",
@@ -26,4 +27,3 @@
     "nodemon": "^3.0.1"
   }
 }
-
