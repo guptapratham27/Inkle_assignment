@@ -13,7 +13,10 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
-connectDB();
+// Connect to database (lazy connection for serverless)
+if (process.env.VERCEL !== '1') {
+  connectDB();
+}
 
 app.use(cors());
 app.use(express.json());
