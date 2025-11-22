@@ -37,6 +37,17 @@ app.get('/health', (req, res) => {
 // Diagnostic endpoint to check environment variables (without exposing values)
 app.get('/api/diagnostic', (req, res) => {
   try {
+    // Get all environment variable keys (for debugging)
+    const allEnvKeys = Object.keys(process.env).sort();
+    const relevantKeys = allEnvKeys.filter(k => 
+      k.includes('MONGO') || 
+      k.includes('JWT') || 
+      k === 'VERCEL' || 
+      k === 'NODE_ENV' ||
+      k.includes('DATABASE') ||
+      k.includes('DB')
+    );
+    
     const envCheck = {
       hasMongoUri: !!process.env.MONGODB_URI,
       hasJwtSecret: !!process.env.JWT_SECRET,
@@ -45,7 +56,18 @@ app.get('/api/diagnostic', (req, res) => {
       isVercel: process.env.VERCEL === '1',
       mongoUriLength: process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0,
       mongoUriStartsWith: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'not set',
-      allEnvKeys: Object.keys(process.env).filter(k => k.includes('MONGO') || k.includes('JWT') || k === 'VERCEL' || k === 'NODE_ENV')
+      relevantEnvKeys: relevantKeys,
+      totalEnvKeys: allEnvKeys.length,
+      // Show first few chars of each relevant key's value (for debugging, but masked)
+      envValues: relevantKeys.reduce((acc, key) => {
+        const value = process.env[key];
+        if (value) {
+          acc[key] = value.length > 0 ? `${value.substring(0, 3)}... (${value.length} chars)` : 'empty';
+        } else {
+          acc[key] = 'not set';
+        }
+        return acc;
+      }, {})
     };
     
     const status = envCheck.hasMongoUri && envCheck.hasJwtSecret ? 'OK' : 'ERROR';
@@ -57,18 +79,32 @@ app.get('/api/diagnostic', (req, res) => {
       status,
       environment: envCheck,
       message,
-      instructions: !envCheck.hasMongoUri ? {
-        step1: 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables',
-        step2: 'Add MONGODB_URI with value: mongodb+srv://guptapratham2703:pratham123@inkle.wnlxumj.mongodb.net/social_feed?appName=Inkle',
-        step3: 'Select all environments (Production, Preview, Development)',
-        step4: 'Redeploy your application'
+      troubleshooting: !envCheck.hasMongoUri ? {
+        issue: 'Environment variables not found in serverless function',
+        possibleCauses: [
+          'Variables not added in Vercel Dashboard → Settings → Environment Variables',
+          'Variables added but not selected for correct environment (must select Production, Preview, AND Development)',
+          'Variables added but application not redeployed after adding them',
+          'Variables have typos in names (must be exactly MONGODB_URI, JWT_SECRET, etc.)',
+          'Variables added to wrong project'
+        ],
+        solution: {
+          step1: 'Go to Vercel Dashboard → Your Project → Settings → Environment Variables',
+          step2: 'Verify MONGODB_URI exists. If not, add it with value: mongodb+srv://guptapratham2703:pratham123@inkle.wnlxumj.mongodb.net/social_feed?appName=Inkle',
+          step3: 'Verify JWT_SECRET exists. If not, add it with value: your_super_secret_jwt_key_change_this_in_production',
+          step4: 'Verify JWT_EXPIRE exists. If not, add it with value: 7d',
+          step5: 'For EACH variable, ensure ALL environments are selected: Production ✅ Preview ✅ Development ✅',
+          step6: 'Go to Deployments tab → Click three dots (⋯) → Redeploy',
+          step7: 'Wait for deployment to complete, then check this endpoint again'
+        }
       } : undefined
     });
   } catch (error) {
     res.status(500).json({
       status: 'ERROR',
       error: error.message,
-      message: 'Error checking environment variables'
+      message: 'Error checking environment variables',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

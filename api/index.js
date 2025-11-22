@@ -1,6 +1,9 @@
-// Load environment variables (for local development)
-// In Vercel, env vars are automatically available, but dotenv helps for local testing
-require('dotenv').config();
+// Load environment variables (for local development only)
+// In Vercel, env vars are automatically available via process.env
+// Only load dotenv if not in Vercel environment
+if (process.env.VERCEL !== '1') {
+  require('dotenv').config();
+}
 
 const connectDB = require('../config/database');
 const app = require('../src/app');
