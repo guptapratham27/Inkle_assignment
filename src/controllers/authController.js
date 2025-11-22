@@ -66,6 +66,10 @@ const login = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
+    if (error.name === 'MongoServerError' || error.message.includes('Mongo')) {
+      return res.status(500).json({ error: 'Database connection error' });
+    }
     res.status(500).json({ error: 'Server error during login' });
   }
 };

@@ -1,21 +1,23 @@
 const connectDB = require('../config/database');
 const app = require('../src/app');
 
-// Connect to database on first request (serverless optimization)
-let dbConnected = false;
-
+// Ensure database connection before handling requests
 module.exports = async (req, res) => {
-  // Connect to database on first request
-  if (!dbConnected) {
-    try {
-      await connectDB();
-      dbConnected = true;
-    } catch (error) {
-      console.error('Database connection error:', error);
-      return res.status(500).json({ error: 'Database connection failed' });
-    }
+  try {
+    // Always ensure connection (cached internally by mongoose)
+    await connectDB();
+    return app(req, res);
+  } catch (error) {
+    console.error('Database connection error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    return res.status(500).json({ 
+      error: 'Database connection failed',
+      message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+    });
   }
-  
-  return app(req, res);
 };
 
