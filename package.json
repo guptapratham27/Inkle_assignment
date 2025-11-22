@@ -1,0 +1,29 @@
+{
+  "name": "social-activity-feed",
+  "version": "1.0.0",
+  "description": "Social activity feed backend with proper permissions",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "create-owner": "node scripts/createOwner.js",
+    "create-test-data": "node scripts/createTestData.js",
+    "remove-test-data": "node scripts/removeTestData.js"
+  },
+  "keywords": ["social", "activity", "feed", "api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "express-validator": "^7.0.1",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+
