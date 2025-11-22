@@ -12,11 +12,23 @@ module.exports = async (req, res) => {
     console.error('Error details:', {
       message: error.message,
       name: error.name,
-      stack: error.stack
+      code: error.code,
+      hasMongoUri: !!process.env.MONGODB_URI
     });
+    
+    // More specific error messages
+    let errorMessage = 'Database connection failed';
+    if (error.message.includes('MONGODB_URI')) {
+      errorMessage = 'Database configuration error - check environment variables';
+    } else if (error.message.includes('authentication failed')) {
+      errorMessage = 'Database authentication failed - check credentials';
+    } else if (error.message.includes('timeout')) {
+      errorMessage = 'Database connection timeout - check network access';
+    }
+    
     return res.status(500).json({ 
-      error: 'Database connection failed',
-      message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+      error: errorMessage,
+      message: process.env.NODE_ENV === 'production' ? 'Please check server configuration' : error.message
     });
   }
 };

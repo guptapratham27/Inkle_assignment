@@ -7,8 +7,8 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-  // Return existing connection if available
-  if (cached.conn) {
+  // Return existing connection if available and ready
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
 
@@ -17,20 +17,31 @@ const connectDB = async () => {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
     };
 
     if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined in environment variables');
+      const error = new Error('MONGODB_URI is not defined in environment variables');
+      console.error('Database config error:', error.message);
+      throw error;
     }
 
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
+    // Ensure database name is in the connection string
+    let mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri.includes('/?') && !mongoUri.match(/\/[^?]+(\?|$)/)) {
+      mongoUri = mongoUri.replace(/\?/, '/social_feed?');
+    }
+
+    cached.promise = mongoose.connect(mongoUri, opts).then((mongoose) => {
       console.log('MongoDB connected successfully');
+      console.log('Database:', mongoose.connection.db.databaseName);
       return mongoose;
     }).catch((error) => {
       cached.promise = null;
-      console.error('MongoDB connection error:', error);
+      console.error('MongoDB connection error:', error.message);
+      console.error('Connection string (masked):', mongoUri.replace(/:[^:@]+@/, ':****@'));
       throw error;
     });
   }
