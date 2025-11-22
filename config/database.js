@@ -22,9 +22,10 @@ const connectDB = async () => {
       connectTimeoutMS: 10000,
     };
 
-    if (!process.env.MONGODB_URI) {
+    if (!process.env.MONGODB_URI || process.env.MONGODB_URI.trim() === '') {
       const error = new Error('MONGODB_URI is not defined in environment variables');
       console.error('Database config error:', error.message);
+      console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('MONGO') || k.includes('VERCEL')));
       throw error;
     }
 
